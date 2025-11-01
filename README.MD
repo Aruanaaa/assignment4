@@ -32,7 +32,7 @@ Each package handles a separate topic:
 * dagsp/ — shortest path and critical path analysis in DAGs.
 * metrics/ — counts different operations during algorithm execution (for analysis and performance tracking).
 
----
+
 
 ## 2. How It Works
 
@@ -51,7 +51,7 @@ Results were automatically saved to:
 results/analysis_results.csv
 
 
----
+
 
 ## 4. Results Summary
 
@@ -69,7 +69,7 @@ Below are the summaries for all nine datasets exactly as they appeared during pr
 | small_2.json | 8     | 13    | 5          | [1,4,1,1,1]                                   | 5                        | 13.0                 | [4, 3, 2, 1, 0]          |
 | small_3.json | 10    | 31    | 1          | [10]                                          | 1                        | 0.0                  | [0]                      |
 
----
+
 
 ## 5. Observations and Notes
 
@@ -82,7 +82,7 @@ While testing, I noticed several interesting patterns:
 
 * In all purely acyclic graphs (small_1.json, medium_1.json, large_1.json), the topological order and the critical path were computed normally, confirming that the algorithms handled edge relaxations correctly.
 
----
+
 
 ## 6. Testing
 
@@ -94,7 +94,7 @@ I wrote several JUnit test classes:
 
 All tests passed successfully after several adjustments. I also verified that the Metrics class properly counts algorithmic operations (like relaxations and DFS traversals), which was helpful for performance comparison.
 
----
+
 
 ## 7. Conclusion
 
