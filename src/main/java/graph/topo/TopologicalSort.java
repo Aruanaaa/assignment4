@@ -18,7 +18,7 @@ public class TopologicalSort {
         int n = graph.getN();
         int[] inDegree = new int[n];
 
-        // Calculate in-degrees
+        // Calculate in-degreess
         for (int u = 0; u < n; u++) {
             for (Graph.Edge edge : graph.getEdges(u)) {
                 inDegree[edge.v]++;
