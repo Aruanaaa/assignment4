@@ -69,7 +69,38 @@ Below are the summaries for all nine datasets exactly as they appeared during pr
 | small_2.json | 8     | 13    | 5          | [1,4,1,1,1]                                   | 5                        | 13.0                 | [4, 3, 2, 1, 0]          |
 | small_3.json | 10    | 31    | 1          | [10]                                          | 1                        | 0.0                  | [0]                      |
 
+1. Small Graphs (6–10 nodes)
 
+small_1.json: 6 nodes, 9 edges — all nodes were separate SCCs (no cycles). The graph was acyclic, producing a critical path length of 10.0.
+
+small_2.json: 8 nodes, 13 edges — contained one small cycle (4 nodes in the same SCC). The condensation graph had 5 nodes, and the critical path was 13.0.
+
+small_3.json: 10 nodes, 31 edges — fully connected and cyclic (only one SCC). Therefore, the critical path length was 0.0, as no topological order was possible.
+
+Observation:
+Small graphs showed clear differences between acyclic and cyclic structures. Pure DAGs (like small_1) had meaningful critical paths, while fully cyclic ones (like small_3) did not.
+
+2. Medium Graphs (10–20 nodes)
+
+medium_1.json: 12 nodes, 18 edges — completely acyclic, 12 SCCs of size 1 each. Critical path length 14.0.
+
+medium_2.json: 15 nodes, 24 edges — partially cyclic with 9 SCCs (one large SCC of size 7). Critical path length 25.0.
+
+medium_3.json: 18 nodes, 107 edges — very dense, single SCC (fully cyclic). Critical path length 0.0.
+
+Observation:
+As the number of edges increased, the likelihood of cycles grew. Sparse graphs (medium_1) allowed DAG analysis, while dense graphs (medium_3) turned into a single large SCC, where no topological sorting was possible.
+
+3. Large Graphs (20–50 nodes)
+
+large_1.json: 22 nodes, 33 edges — all nodes isolated (22 SCCs). Critical path 18.0.
+
+large_2.json: 30 nodes, 47 edges — four large SCCs (sizes [7,7,8,8]). Condensation graph simplified to 4 nodes, with a critical path of 15.0.
+
+large_3.json: 40 nodes, 546 edges — extremely dense, forming one massive SCC of all 40 nodes. No valid topological order (critical path 0.0).
+
+Observation:
+For large graphs, structure density had the biggest impact. Sparse versions behaved as DAGs with long paths, while dense ones collapsed into a single strongly connected component.
 
 ## 5. Observations and Notes
 
