@@ -1,80 +1,54 @@
-// src/main/java/graph/topo/TopologicalSort.java
 package graph.topo;
 
-import graph.models.Graph;
-import graph.models.Node;
-import graph.models.Edge;
-import graph.models.Metrics;
+import graph.Graph;
+import graph.metrics.Metrics;
 
 import java.util.*;
 
 public class TopologicalSort {
-    private Metrics metrics;
+    private final Graph graph;
+    private final Metrics metrics;
 
-    public TopologicalSort() {
-        this.metrics = new Metrics();
+    public TopologicalSort(Graph graph, Metrics metrics) {
+        this.graph = graph;
+        this.metrics = metrics;
     }
 
-    public List<Node> topologicalOrder(Graph graph) {
-        metrics.startTimer();
-        metrics.reset();
+    public List<Integer> topologicalOrder() {
+        int n = graph.getN();
+        int[] inDegree = new int[n];
 
-        Map<Node, Integer> inDegree = new HashMap<>();
-        Queue<Node> queue = new LinkedList<>();
-        List<Node> result = new ArrayList<>();
-
-        // Инициализация in-degree
-        for (Node node : graph.getNodes()) {
-            inDegree.put(node, 0);
-        }
-
-        // Вычисление in-degree
-        for (Edge edge : graph.getEdges()) {
-            Node toNode = graph.getNodeById(edge.getTo());
-            inDegree.put(toNode, inDegree.get(toNode) + 1);
-            metrics.incrementEdgeTraversals();
-        }
-
-        // Добавление узлов с in-degree = 0 в очередь
-        for (Node node : graph.getNodes()) {
-            if (inDegree.get(node) == 0) {
-                queue.offer(node);
-                metrics.incrementQueueOperations();
+        // Calculate in-degrees
+        for (int u = 0; u < n; u++) {
+            for (Graph.Edge edge : graph.getEdges(u)) {
+                inDegree[edge.v]++;
+                metrics.incrementOperation("Degree calculations");
             }
         }
 
-        // Обработка очереди
+        Queue<Integer> queue = new LinkedList<>();
+        for (int i = 0; i < n; i++) {
+            if (inDegree[i] == 0) {
+                queue.add(i);
+                metrics.incrementOperation("Queue pushes");
+            }
+        }
+
+        List<Integer> result = new ArrayList<>();
         while (!queue.isEmpty()) {
-            Node current = queue.poll();
-            metrics.incrementQueueOperations();
-            result.add(current);
+            int u = queue.poll();
+            metrics.incrementOperation("Queue pops");
+            result.add(u);
 
-            // Уменьшаем in-degree соседей
-            for (Edge edge : graph.getEdges()) {
-                if (edge.getFrom().equals(current.getId())) {
-                    metrics.incrementEdgeTraversals();
-                    Node neighbor = graph.getNodeById(edge.getTo());
-                    inDegree.put(neighbor, inDegree.get(neighbor) - 1);
-
-                    if (inDegree.get(neighbor) == 0) {
-                        queue.offer(neighbor);
-                        metrics.incrementQueueOperations();
-                    }
+            for (Graph.Edge edge : graph.getEdges(u)) {
+                inDegree[edge.v]--;
+                if (inDegree[edge.v] == 0) {
+                    queue.add(edge.v);
+                    metrics.incrementOperation("Queue pushes");
                 }
             }
         }
 
-        metrics.stopTimer();
-
-        // Проверка на циклы
-        if (result.size() != graph.getNodes().size()) {
-            throw new IllegalArgumentException("Graph has cycles - topological sort not possible");
-        }
-
         return result;
-    }
-
-    public Metrics getMetrics() {
-        return metrics;
     }
 }

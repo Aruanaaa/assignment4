@@ -1,146 +1,123 @@
-// src/main/java/graph/scc/TarjanSCC.java
 package graph.scc;
 
-import graph.models.Graph;
-import graph.models.Node;
-import graph.models.Edge;
-import graph.models.SCCResult;
-import graph.models.Metrics;
+import graph.Graph;
+import graph.metrics.Metrics;
 
 import java.util.*;
 
 public class TarjanSCC {
+    private final Graph graph;
+    private final Metrics metrics;
+
+
     private int index;
-    private Stack<Node> stack;
-    private Map<Node, Integer> indices;
-    private Map<Node, Integer> lowLinks;
-    private Set<Node> onStack;
-    private List<List<Node>> components;
-    private Metrics metrics;
+    private int[] indices;
+    private int[] lowlinks;
+    private boolean[] onStack;
+    private Stack<Integer> stack;
+    private List<List<Integer>> sccs;
 
-    public TarjanSCC() {
-        this.metrics = new Metrics();
+    public TarjanSCC(Graph graph, Metrics metrics) {
+        this.graph = graph;
+        this.metrics = metrics;
     }
 
-    public SCCResult findSCC(Graph graph) {
-        metrics.startTimer();
-        metrics.reset();
-
-        index = 0;
+    // поиск сильно связанных компонент ---
+    public List<List<Integer>> findSCCs() {
+        int n = graph.getN();
+        indices = new int[n];
+        lowlinks = new int[n];
+        onStack = new boolean[n];
         stack = new Stack<>();
-        indices = new HashMap<>();
-        lowLinks = new HashMap<>();
-        onStack = new HashSet<>();
-        components = new ArrayList<>();
+        sccs = new ArrayList<>();
+        index = 0;
+        Arrays.fill(indices, -1); // -1 означает, что вершина ещё не посещена
 
-        // Инициализация
-        for (Node node : graph.getNodes()) {
-            indices.put(node, -1);
-            lowLinks.put(node, -1);
-        }
 
-        // Запуск DFS для каждого непосещенного узла
-        for (Node node : graph.getNodes()) {
-            if (indices.get(node) == -1) {
-                strongConnect(node, graph);
+        for (int i = 0; i < n; i++) {
+            metrics.incrementOperation("DFS visits");
+            if (indices[i] == -1) {
+                strongConnect(i);
             }
         }
-
-        metrics.stopTimer();
-
-        SCCResult result = new SCCResult();
-        result.setComponents(components);
-        result.setCondensationGraph(buildCondensationGraph(graph));
-
-        return result;
+        return sccs;
     }
 
-    private void strongConnect(Node node, Graph graph) {
-        metrics.incrementDfsVisits();
-
-        indices.put(node, index);
-        lowLinks.put(node, index);
+    //Рекурсивная функция для алгоритма
+    private void strongConnect(int v) {
+        indices[v] = index;
+        lowlinks[v] = index;
         index++;
-        stack.push(node);
-        onStack.add(node);
+        stack.push(v);
+        onStack[v] = true;
 
-        // Ищем всех соседей
-        for (Edge edge : graph.getEdges()) {
-            if (edge.getFrom().equals(node.getId())) {
-                metrics.incrementEdgeTraversals();
-                Node neighbor = graph.getNodeById(edge.getTo());
+        for (Graph.Edge edge : graph.getEdges(v)) {
+            metrics.incrementOperation("Edge traversals");
+            int w = edge.v;
+            if (indices[w] == -1) {
 
-                if (indices.get(neighbor) == -1) {
-                    strongConnect(neighbor, graph);
-                    lowLinks.put(node, Math.min(lowLinks.get(node), lowLinks.get(neighbor)));
-                } else if (onStack.contains(neighbor)) {
-                    lowLinks.put(node, Math.min(lowLinks.get(node), indices.get(neighbor)));
-                }
+                strongConnect(w);
+                lowlinks[v] = Math.min(lowlinks[v], lowlinks[w]);
+            } else if (onStack[w]) {
+
+                lowlinks[v] = Math.min(lowlinks[v], indices[w]);
             }
         }
 
-        // Если node - корень SCC
-        if (lowLinks.get(node).equals(indices.get(node))) {
-            List<Node> component = new ArrayList<>();
-            Node popped;
-
+        if (lowlinks[v] == indices[v]) {
+            List<Integer> scc = new ArrayList<>();
+            int w;
             do {
-                popped = stack.pop();
-                onStack.remove(popped);
-                component.add(popped);
-            } while (!popped.equals(node));
+                w = stack.pop();
+                onStack[w] = false;
+                scc.add(w);
+            } while (w != v);
 
-            components.add(component);
+            sccs.add(scc);
         }
     }
 
-    private Graph buildCondensationGraph(Graph originalGraph) {
-        Graph condensation = new Graph();
-        Map<List<Node>, Node> componentToNode = new HashMap<>();
+    public Graph buildCondensationGraph() {
+        List<List<Integer>> components = findSCCs();
+        int componentCount = components.size();
 
-        // Создаем узлы для каждой компоненты
-        for (List<Node> component : components) {
-            String componentId = "SCC_" + components.indexOf(component);
-            Node condenseNode = new Node(componentId, 0);
-            condensation.addNode(condenseNode);
-            componentToNode.put(component, condenseNode);
+
+        int[] componentId = new int[graph.getN()];
+        for (int i = 0; i < components.size(); i++) {
+            for (int node : components.get(i)) {
+                componentId[node] = i;
+            }
         }
 
-        // Создаем ребра между компонентами
-        Set<String> addedEdges = new HashSet<>();
 
-        for (Edge edge : originalGraph.getEdges()) {
-            Node fromNode = originalGraph.getNodeById(edge.getFrom());
-            Node toNode = originalGraph.getNodeById(edge.getTo());
+        List<Graph.Node> condNodes = new ArrayList<>();
+        for (int i = 0; i < componentCount; i++) {
+            double maxDuration = components.get(i).stream()
+                    .mapToDouble(node -> graph.getNodes().get(node).duration)
+                    .max().orElse(0);
+            condNodes.add(new Graph.Node(i, "C" + i, maxDuration));
+        }
 
-            List<Node> fromComponent = findComponent(fromNode);
-            List<Node> toComponent = findComponent(toNode);
 
-            if (!fromComponent.equals(toComponent)) {
-                Node fromCondense = componentToNode.get(fromComponent);
-                Node toCondense = componentToNode.get(toComponent);
+        Graph condensation = new Graph(componentCount, condNodes, graph.getWeightModel());
 
-                String edgeKey = fromCondense.getId() + "->" + toCondense.getId();
-                if (!addedEdges.contains(edgeKey)) {
-                    condensation.addEdge(new Edge(fromCondense.getId(), toCondense.getId(), edge.getWeight()));
-                    addedEdges.add(edgeKey);
+
+        Set<String> edgesAdded = new HashSet<>();
+        for (int u = 0; u < graph.getN(); u++) {
+            for (Graph.Edge edge : graph.getEdges(u)) {
+                int compU = componentId[u];
+                int compV = componentId[edge.v];
+
+                if (compU != compV) {
+                    String edgeKey = compU + "-" + compV;
+                    if (!edgesAdded.contains(edgeKey)) {
+                        condensation.addEdge(compU, compV, edge.weight);
+                        edgesAdded.add(edgeKey);
+                    }
                 }
             }
         }
 
         return condensation;
-    }
-
-    private List<Node> findComponent(Node node) {
-        for (List<Node> component : components) {
-            if (component.contains(node)) {
-                return component;
-            }
-        }
-        return null;
-    }
-
-    public Metrics getMetrics() {
-        return metrics;
     }
 }
