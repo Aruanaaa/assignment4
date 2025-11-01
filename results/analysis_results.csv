@@ -1,0 +1,10 @@
+Dataset,Nodes,Edges,WeightModel,SCCs,SCC_Time(ns),SCC_Operations,Topo_Time(ns),Topo_Operations,SP_Time(ns),SP_Operations,CriticalPath_Length,Source_Node
+large_1.json,22,33,edge,22,15096000,DFS visits:44; Edge traversals:66,1154400,Queue pops:22; Queue pushes:22; Degree calculations:33,627800,{Longest path relaxations=22, Relaxations=22},18.0,0
+large_2.json,30,47,edge,4,176500,DFS visits:60; Edge traversals:94,10300,Queue pops:4; Queue pushes:4; Degree calculations:3,13400,{Longest path relaxations=4, Relaxations=4},15.0,0
+large_3.json,40,546,edge,1,814300,DFS visits:80; Edge traversals:1092,14300,Queue pops:1; Queue pushes:1,12900,{Longest path relaxations=1, Relaxations=1},0.0,0
+medium_1.json,12,18,edge,12,161200,DFS visits:24; Edge traversals:36,15600,Queue pops:12; Queue pushes:12; Degree calculations:18,14300,{Longest path relaxations=12, Relaxations=12},14.0,0
+medium_2.json,15,24,edge,9,135400,DFS visits:30; Edge traversals:48,9700,Queue pops:9; Queue pushes:9; Degree calculations:12,10500,{Longest path relaxations=9, Relaxations=9},25.0,0
+medium_3.json,18,107,edge,1,94100,DFS visits:36; Edge traversals:214,4400,Queue pops:1; Queue pushes:1,4200,{Longest path relaxations=1, Relaxations=1},0.0,0
+small_1.json,6,9,edge,6,85400,DFS visits:12; Edge traversals:18,9500,Queue pops:6; Queue pushes:6; Degree calculations:9,8800,{Longest path relaxations=6, Relaxations=6},10.0,0
+small_2.json,8,13,edge,5,95400,DFS visits:16; Edge traversals:26,6700,Queue pops:5; Queue pushes:5; Degree calculations:7,7400,{Longest path relaxations=5, Relaxations=5},13.0,0
+small_3.json,10,31,edge,1,50100,DFS visits:20; Edge traversals:62,3500,Queue pops:1; Queue pushes:1,3800,{Longest path relaxations=1, Relaxations=1},0.0,0
