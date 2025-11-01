@@ -1,254 +1,110 @@
-Smart City Scheduling - Graph Analysis Project
-Project Overview
-This project implements graph algorithms for analyzing task dependencies in smart city scheduling scenarios. I developed this as part of my coursework to understand how strongly connected components and topological ordering can help optimize urban service tasks like street cleaning, repairs, and sensor maintenance.
+ Graph Algorithms Project – SCC and Critical Path Analysis
 
-The system processes dependency graphs where nodes represent tasks and edges represent dependencies between them. It identifies cyclic dependencies through SCC detection and then optimizes task scheduling using topological sorting and path algorithms.
+This project combines two main concepts from graph theory that we studied in class: **Strongly Connected Components (SCC)** and **Shortest Paths in Directed Acyclic Graphs (DAGs)**.
+The goal was to apply these algorithms to real-like datasets that simulate scheduling or maintenance tasks in a “Smart City” or “Smart Campus” scenario.
 
-Building and Running
-Prerequisites
-Java 11 or higher
 
-Maven 3.6+
 
-Quick Start
-bash
-# Clone and build
-git clone <repository-url>
-cd smart-city-scheduling
-mvn clean compile
+## 1. Project Structure
 
-# Run tests
-mvn test
+```
+graph/
+ ├── Graph.java
+ ├── metrics/
+ │    └── Metrics.java
+ ├── scc/
+ │    └── TarjanSCC.java
+ ├── topo/
+ │    └── TopologicalSort.java
+ ├── dagsp/
+ │    └── DAGShortestPath.java
+ ├── Main.java
+ └── tests/
+      ├── DAGShortestPathTest.java
+      ├── SCCTest.java
+      └── TopologicalSortTest.java
+```
 
-# Analyze all datasets
-mvn exec:java -Dexec.mainClass="graph.Main"
-Project Structure
-text
-src/
-├── main/java/graph/
-│   ├── models/      # Data structures for graphs, nodes, edges
-│   ├── scc/         # Tarjan's SCC algorithm
-│   ├── topo/        # Kahn's topological sort
-│   ├── dagsp/       # Shortest/longest paths in DAGs
-│   └── utils/       # JSON loading utilities
-└── test/java/       # JUnit tests
-Dataset Analysis
-I analyzed all 9 provided datasets across three size categories. Here's what I found:
+Each package handles a separate topic:
 
-Small Datasets (6-10 nodes)
-small_1.json
+* scc/ — Tarjan’s algorithm for finding strongly connected components.
+* topo/ — topological sorting using Kahn’s algorithm.
+* dagsp/ — shortest path and critical path analysis in DAGs.
+* metrics/ — counts different operations during algorithm execution (for analysis and performance tracking).
 
-Structure: 7 nodes, 9 edges - Moderately connected
+---
 
-SCC Analysis: Found 3 strongly connected components. One component had 3 nodes (A, B, C) forming a cycle, while the others were single nodes. This suggests some cyclic dependencies but mostly linear workflows.
+## 2. How It Works
 
-Performance: SCC detection took 2.1ms, topological sort completed in 0.8ms. The condensation graph had clear linear dependencies.
+Each JSON file represents a directed graph with nodes, durations, and dependencies.
+The program first detects SCCs to identify cycles. If cycles exist, they are grouped and replaced by single nodes in the condensation graph, which is guaranteed to be acyclic.
+Then, on that DAG, the program computes the critical path — the longest sequence of dependent tasks that determines the overall project duration.
 
-Critical Path: Length of 15 through components SCC_0 → SCC_1 → SCC_2
 
-small_2.json
+## 3. Running the Program
 
-Structure: 8 nodes, 6 edges - Sparse graph
 
-SCC Analysis: All 8 nodes were separate components, indicating no cyclic dependencies. This is essentially a pure DAG.
 
-Performance: Very fast processing (1.4ms total) since no cycles to resolve.
+Results were automatically saved to:
 
-Critical Path: Shortest at length 8, showing well-balanced task durations.
 
-small_3.json
+results/analysis_results.csv
 
-Structure: 9 nodes, 14 edges - Dense for its size
 
-SCC Analysis: 2 components found - one large component with 7 nodes and one with 2 nodes. This indicates significant cyclic dependencies.
+---
 
-Performance: Took 3.2ms due to the dense connectivity and larger SCC.
+## 4. Results Summary
 
-Critical Path: Length of 23, the longest among small datasets.
+Below are the summaries for all nine datasets exactly as they appeared during program execution.
 
-Medium Datasets (10-20 nodes)
-medium_1.json
+| File        | Nodes | Edges | SCCs found | SCC sizes                                     | Condensation graph nodes | Critical path length | Critical path            |
+| ----------- | ----- | ----- | ---------- | --------------------------------------------- | ------------------------ | -------------------- | ------------------------ |
+| large_1.json | 22    | 33    | 22         | [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1] | 22                       | 18.0                 | [10, 9, 8, 5, 4]         |
+| large_2.json | 30    | 47    | 4          | [7,7,8,8]                                     | 4                        | 15.0                 | [3, 2, 1, 0]             |
+| large_3.json| 40    | 546   | 1          | [40]                                          | 1                        | 0.0                  | [0]                      |
+| medium_1.json | 12    | 18    | 12         | [1,1,1,1,1,1,1,1,1,1,1,1]                     | 12                       | 14.0                 | [10, 7, 5, 4, 2]         |
+| medium_2.json | 15    | 24    | 9          | [1,1,7,1,1,1,1,1,1]                           | 9                        | 25.0                 | [8, 7, 6, 5, 4, 2, 1, 0] |
+| medium_3.json| 18    | 107   | 1          | [18]                                          | 1                        | 0.0                  | [0]                      |
+| small_1.json | 6     | 9     | 6          | [1,1,1,1,1,1]                                 | 6                        | 10.0                 | [5, 4, 3, 1, 0]          |
+| small_2.json | 8     | 13    | 5          | [1,4,1,1,1]                                   | 5                        | 13.0                 | [4, 3, 2, 1, 0]          |
+| small_3.json | 10    | 31    | 1          | [10]                                          | 1                        | 0.0                  | [0]                      |
 
-Structure: 15 nodes, 18 edges - Balanced connectivity
+---
 
-SCC Analysis: 6 components with mixed sizes. Two medium components (4 nodes each) and four single nodes. Shows modular structure.
+## 5. Observations and Notes
 
-Performance: Processing time increased to 8.7ms as expected with more nodes.
+While testing, I noticed several interesting patterns:
 
-Critical Path: Length 34 through a chain of 4 components.
+* Datasets like large_3.json and medium_3.json were fully cyclic, which means they formed a single SCC (all nodes mutually reachable).
+  In such cases, the condensation graph had just one node, so the critical path was 0 with length 0.0.
 
-medium_2.json
+* Graphs such as medium_2.json and large_2.json contained clusters of cycles. After SCC compression, the DAG became smaller (only 4 or 9 nodes), which made it easier to compute the critical path.
 
-Structure: 18 nodes, 25 edges - Denser connections
+* In all purely acyclic graphs (small_1.json, medium_1.json, large_1.json), the topological order and the critical path were computed normally, confirming that the algorithms handled edge relaxations correctly.
 
-SCC Analysis: Only 3 components found, with one dominant component containing 12 nodes. This suggests tightly coupled tasks.
+---
 
-Performance: 12.3ms processing time, with more edge traversals required.
+## 6. Testing
 
-Critical Path: Length 41, indicating some long dependency chains.
+I wrote several JUnit test classes:
 
-medium_3.json
+* SCCTest.java – verifies that Tarjan’s algorithm correctly identifies SCCs, handles cycles, multiple components, and builds condensation graphs properly.
+* *TopologicalSortTest.java – checks correctness of topological order on various DAGs (simple, linear, complex, and empty).
+* DAGShortestPathTest.java – validates shortest paths, critical paths, and metrics collection. It includes cases for disconnected graphs and single-node graphs.
 
-Structure: 16 nodes, 12 edges - Very sparse
+All tests passed successfully after several adjustments. I also verified that the Metrics class properly counts algorithmic operations (like relaxations and DFS traversals), which was helpful for performance comparison.
 
-SCC Analysis: 10 separate components, mostly single nodes. Almost no cyclic dependencies.
+---
 
-Performance: Fastest medium dataset at 5.1ms due to sparse connectivity.
+## 7. Conclusion
 
-Critical Path: Length 28, well-optimized structure.
+This project helped me understand the connection between cycle detection and task scheduling in directed graphs.
+By first identifying SCCs and then performing a topological sort and critical path analysis on the reduced DAG, we can handle both cyclic and acyclic data efficiently.
 
-Large Datasets (20-50 nodes)
-large_1.json
+Among the nine datasets:
 
-Structure: 35 nodes, 45 edges - Well-balanced large graph
+* 3 were fully cyclic (single SCCs),
+* 3 were acyclic (no cycles),
+* 3 had mixed structures with multiple SCCs.
 
-SCC Analysis: 8 components with good size distribution. Largest component has 8 nodes, showing reasonable modularity.
-
-Performance: 45.2ms total processing. The algorithms scale well with size.
-
-Critical Path: Length 67 through a 5-component chain.
-
-large_2.json
-
-Structure: 42 nodes, 68 edges - Dense connectivity
-
-SCC Analysis: Only 4 components, with one massive component of 32 nodes. This indicates highly interdependent tasks.
-
-Performance: 89.7ms processing time, with significant DFS traversals.
-
-Critical Path: Length 112, showing some very long task sequences.
-
-large_3.json
-
-Structure: 28 nodes, 22 edges - Sparse for large category
-
-SCC Analysis: 15 components, mostly single nodes. Very modular structure.
-
-Performance: 32.1ms, efficient due to lack of complex cycles.
-
-Critical Path: Length 53, efficient scheduling possible.
-
-Performance Analysis
-Algorithm Efficiency
-SCC Detection (Tarjan's Algorithm)
-
-Time complexity: O(V + E) held true in practice
-
-Small graphs: 1-4ms
-
-Medium graphs: 5-12ms
-
-Large graphs: 30-90ms
-
-Performance heavily depends on graph density rather than just size
-
-Topological Sort (Kahn's Algorithm)
-
-Consistently faster than SCC detection
-
-Small: 0.5-1.2ms
-
-Medium: 1.5-3ms
-
-Large: 8-15ms
-
-Works best on sparse graphs with few dependencies
-
-DAG Path Finding
-
-Most efficient algorithm overall
-
-Small: 0.3-0.8ms
-
-Medium: 1-2ms
-
-Large: 5-12ms
-
-Linear scaling with graph size
-
-Key Observations
-Graph Density Impact: Dense graphs (like large_2.json) took 3x longer to process than sparse graphs of similar size.
-
-SCC Distribution: Graphs with many small components processed faster than those with few large components.
-
-Real-world Implications: The datasets with balanced SCC sizes (like medium_1.json) represent better modular designs for city scheduling.
-
-Technical Implementation Details
-Weight Model Choice
-I used edge weights rather than node durations for path calculations because:
-
-Edge weights better represent dependency costs between tasks
-
-This aligns with standard graph theory conventions
-
-Allows modeling of transportation or communication costs between locations
-
-Algorithm Selection Rationale
-Tarjan over Kosaraju for SCC:
-
-More intuitive stack-based approach
-
-Single DFS pass instead of two
-
-Better constant factors in practice
-
-Kahn's Algorithm for Topological Sort:
-
-More intuitive than DFS-based approaches
-
-Naturally detects cycles during execution
-
-Easy to implement and understand
-
-Metrics Collection
-The system tracks:
-
-Execution time in nanoseconds
-
-DFS node visits
-
-Edge traversals
-
-Queue operations
-
-Relaxation steps in path algorithms
-
-This comprehensive instrumentation helped identify bottlenecks and verify algorithm complexity.
-
-Practical Recommendations
-Based on analyzing all 9 datasets, here's when to use each approach:
-
-Use SCC Detection When:
-
-You suspect cyclic dependencies in task scheduling
-
-Need to identify tightly coupled task groups
-
-Preparing graphs for topological analysis
-
-Use Topological Sort When:
-
-Working with known DAG structures
-
-Need linear task ordering
-
-Validating task sequence feasibility
-
-Use DAG Path Algorithms When:
-
-Optimizing task scheduling sequences
-
-Identifying critical paths and bottlenecks
-
-Resource allocation planning
-
-Conclusion
-This project successfully demonstrates how graph algorithms can solve real-world smart city scheduling problems. The analysis of all 9 datasets shows that:
-
-Most real-world scheduling problems contain some cyclic dependencies
-
-Modular designs (multiple medium-sized SCCs) process most efficiently
-
-Sparse graphs are significantly easier to optimize
-
-The algorithms scale well to practical problem sizes (up to 50 nodes)
+The algorithms performed correctly in all scenarios, and the final CSV summary matched the printed results.
